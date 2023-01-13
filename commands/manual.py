@@ -2,6 +2,7 @@
 #
 #	show specs of the given command or the list of all commands names if none given
 from config import *
+import asyncio
 
 async def internal(out_channel,args):
 	if len(args) == 0:

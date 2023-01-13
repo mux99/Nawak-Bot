@@ -1,13 +1,25 @@
+from os import getenv
+from dotenv import load_dotenv
+import logging
+logging.basicConfig()
+log = logging.getLogger(__name__)
+
 from config import *
 from fcts import readCSV
-
-from os import getenv
 
 #======================================================================
 @bot.event
 async def on_ready():
 	for f in listeners["on_ready"]: await f()
-	print(f"-----connected-----")
+	log.info("succesfully connected")
+
+@bot.event
+async def on_raw_reaction_add(payload):
+	for f in listeners["on_raw_reaction_add"]: await f(payload)
+
+@bot.event
+async def on_raw_reaction_remove(payload):
+	for f in listeners["on_raw_reaction_remove"]: await f(payload)
 
 @bot.event
 async def on_message(message):
@@ -22,14 +34,6 @@ async def on_message(message):
 		commandHandler(tmp[0][1:],tmp[1:],message,commands_lib)
 		await message.delete()
 
-@bot.event
-async def on_raw_reaction_add(payload):
-	for f in listeners["on_raw_reaction_add"]: await f(payload)
-
-@bot.event
-async def on_raw_reaction_remove(payload):
-	for f in listeners["on_raw_reaction_remove"]: await f(payload)
-
 #======================================================================
 class Command():
 	def __init__(self, function, path, name, perm):
@@ -37,9 +41,9 @@ class Command():
 		self.name = name
 		self.manual = ""
 		self.perm = perm
-
-		#temporary values
 		self.message = None
+
+		#loading help info
 		with open(path) as file:
 			for line in file.readlines():
 				if line[0] == "#": self.manual += line[1:]
@@ -58,29 +62,35 @@ class Command():
 					return True
 		#user perm
 		if self.perm[-5] == "#":
-			print(f"{member.name}#{member.discriminator}")
-			#if self.perm == f"{member.name}#{member.discriminator}"
+			if self.perm == f"{member.name}#{member.discriminator}":
+				return True
 		return False
 
-def add_command(name, funct, path, perm, lib):
-	lib[name] = Command(funct, path, name, perm)
-
 def commandHandler(command, args, message, lib):
-	if lib[command].perm_check(message.author):
-		try:
-			lib[command].call(args, message)
-		except:
-			tmp = " ".join(args)
-			print(f"error calling command: {command} {tmp}")
+	try:
+		if lib[command].perm_check(message.author):
+			try:
+				lib[command].call(args, message)
+			except Exception as e:
+				tmp = " ".join(args)
+				log.error(f"an error ocured during command call '{command} {tmp}'\n{str(e)}")
+		else:
+			log.warning(f"access denied to {message.author.name}#{message.author.discriminator} using command '{command}'")
+	except KeyError:
+		#unknown command, do nothing
+		pass
 
 #======================================================================
 if __name__ == '__main__':
-	print("--loading--")
 	for command in readCSV(commands_path):
-		print(f"-loading: {command[0]}-")
-		package = ".".join(command[1].split(".")[:-1])
-		funct = command[1].split(".")[-1]
-		exec(f"from {package} import {funct} as {funct}")
-		add_command(command[0],command[1].split(".")[-1],(relativ+"/".join(command[1].split(".")[:-1]))+".py",command[2],commands_lib)
+		try:
+			package = ".".join(command[1].split(".")[:-1])
+			funct = command[1].split(".")[-1]
+			exec(f"from {package} import {funct} as {funct}")
+			commands_lib[command[0]] = Command(command[1].split(".")[-1], (relativ+"/".join(command[1].split(".")[:-1]))+".py", command[0], command[2])
+		except Exception as e:
+			log.error(f"error loading {funct}\n{str(e)}")
+		else:
+			log.info(f"succesfully loaded {funct}")
 	load_dotenv()
 	bot.run(getenv("DICORD_TOKEN"))
