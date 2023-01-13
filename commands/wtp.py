@@ -6,6 +6,8 @@
 from config import *
 from fcts import readCSV, get_emoji
 
+import asyncio
+
 async def internal(ids,guild,out_channel):
 	tmp = {}
 	names = {line[1]:(line[0],line[3]) for line in readCSV(games_path)}

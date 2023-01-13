@@ -1,4 +1,4 @@
-#name, #ref
+#name, #ref, #perm
 help, commands.manual.help_C, @everyone
 games, commands.games.games_C, @everyone
 wtp, commands.wtp.wtp_C, @everyone

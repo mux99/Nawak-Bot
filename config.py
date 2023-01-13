@@ -1,8 +1,3 @@
-#natives
-import asyncio
-#installed
-from dotenv import load_dotenv
-import discord
 from discord import Client, Intents
 
 commands_lib = {
@@ -13,7 +8,7 @@ listeners = {
 	"on_raw_reaction_remove":[],
 	"on_ready":[]
 }
-relativ = "NawakBot/"
+relativ = ""
 games_path = relativ+"data/games.csv"
 commands_path = relativ+"data/commands.csv"
 

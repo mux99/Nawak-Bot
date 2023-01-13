@@ -10,6 +10,11 @@ from commands.games_fcts import *
 from fcts import readIMG_bytes, readCSV, get_role_from_emoji
 from config import *
 
+import discord
+import asyncio
+import logging
+log = logging.getLogger(__name__)
+
 #===EVENTS=============================================================
 """
 	remove the role connected to the reaction
@@ -41,7 +46,7 @@ listeners["on_raw_reaction_remove"].append(remove_user)
 #===MAIN-FUNCTION======================================================
 async def new(guild,channel):
 	data = readCSV(games_path)
-	for message in create_message(guild,data):
+	for message in discord.create_message(guild,data):
 		await channel.send(message)
 
 async def update(args,guild,channel):
@@ -51,7 +56,7 @@ async def update(args,guild,channel):
 		try:
 			print("test")
 			tmp = await e.fetch_message(int(args[0]))
-			await tmp.edit(content=create_message(guild)[int(args[1])])
+			await tmp.edit(content=discord.create_message(guild)[int(args[1])])
 		except discord.NotFound:
 			print("oups")
 			continue
@@ -63,13 +68,13 @@ async def recount(guild):
 		message = await channel.fetch_message(_id[0])
 		for reaction in message.reactions:
 			role = get_role_from_emoji(guild,reaction.emoji)
-			for user in await reaction.users().flatten():
+			async for user in reaction.users():
 				member = await guild.fetch_member(user.id)
 				await member.add_roles(role)
 	print("-finished-")
 
 def games_C(args, message):
-	if message.author.permissions_in(message.channel).administrator == False:
+	if message.channel.permissions_for(message.author).administrator == False:
 		return
 	else:
 		loop = asyncio.get_event_loop()
