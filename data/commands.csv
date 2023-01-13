@@ -1,0 +1,5 @@
+#name, #ref
+help, commands.manual.help_C, @everyone
+games, commands.games.games_C, @everyone
+wtp, commands.wtp.wtp_C, @everyone
+ip, commands.get_ip.get_ip_C, mux#8567
