@@ -1,4 +1,5 @@
 from discord import Client, Intents
+import logging as log
 
 commands_lib = {
 }

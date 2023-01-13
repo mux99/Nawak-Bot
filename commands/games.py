@@ -10,7 +10,6 @@ from commands.games_fcts import *
 from fcts import readIMG_bytes, readCSV, get_role_from_emoji
 from config import *
 
-import discord
 import asyncio
 import logging
 log = logging.getLogger(__name__)
@@ -26,7 +25,6 @@ async def remove_user(payload):
 		role = get_role_from_emoji(guild,payload.emoji)
 		member = await guild.fetch_member(payload.user_id)
 		await member.remove_roles(role)
-
 
 """
 	add the role connected to the reaction
@@ -46,32 +44,33 @@ listeners["on_raw_reaction_remove"].append(remove_user)
 #===MAIN-FUNCTION======================================================
 async def new(guild,channel):
 	data = readCSV(games_path)
-	for message in discord.create_message(guild,data):
+	for message in create_messages(guild,data):
 		await channel.send(message)
 
 async def update(args,guild,channel):
-	print(f"-updating: {args}-")
-	data = readCSV(games_path)
+	log.info(f"updating message: {args}")
 	for e in guild.text_channels:
-		try:
-			print("test")
-			tmp = await e.fetch_message(int(args[0]))
-			await tmp.edit(content=discord.create_message(guild)[int(args[1])])
-		except discord.NotFound:
-			print("oups")
-			continue
+		tmp = await e.fetch_message(int(args[0]))
+		await tmp.edit(content=create_messages(guild)[int(args[1])])
 
-async def recount(guild):
-	print("-recounting-")
+async def recount(guild,msg_channel):
+	await msg_channel.send("Recounting users...\nThis may take a while.")
+	log.info("starting a full reaction counting")
+
+	#add new games to users
 	for _id in messages_id:
 		channel = get_channel(guild,_id[1])
 		message = await channel.fetch_message(_id[0])
 		for reaction in message.reactions:
 			role = get_role_from_emoji(guild,reaction.emoji)
 			async for user in reaction.users():
-				member = await guild.fetch_member(user.id)
-				await member.add_roles(role)
-	print("-finished-")
+				member = guild.get_member(user.id)
+				if member is not None: await member.add_roles(role)
+
+	#remove disabled games from users
+	#__TBD__
+
+	await msg_channel.send("Recounting Done!")
 
 def games_C(args, message):
 	if message.channel.permissions_for(message.author).administrator == False:
@@ -85,4 +84,4 @@ def games_C(args, message):
 		elif args[0].upper() == "UPDATE" and len(args) == 3:
 			loop.create_task(update(args,message.guild,message.channel))
 		elif args[0].upper() == "RECOUNT":
-			loop.create_task(recount(message.guild))
+			loop.create_task(recount(message.guild,message.channel))
