@@ -1,8 +1,11 @@
+from config import *
+from fcts import get_emoji
+
 def create_messages(guild,data):
 	messages = [games_message_intro]
 	games_table = {"Autres":[]}
 	#gather all infos
-	for line in table:
+	for line in data:
 		if line[2] == "-":
 			games_table["Autres"].append(line)
 		else:

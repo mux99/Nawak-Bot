@@ -1,8 +1,6 @@
 from os import getenv
 from dotenv import load_dotenv
-import logging
-logging.basicConfig()
-log = logging.getLogger(__name__)
+import discord
 
 from config import *
 from fcts import readCSV
@@ -68,6 +66,7 @@ class Command():
 
 def commandHandler(command, args, message, lib):
 	try:
+		log.info(f"{message.author.name}#{message.author.discriminator} attempt runing: '{command} {tmp}'")
 		if lib[command].perm_check(message.author):
 			try:
 				lib[command].call(args, message)
@@ -82,6 +81,8 @@ def commandHandler(command, args, message, lib):
 
 #======================================================================
 if __name__ == '__main__':
+	discord.utils.setup_logging()
+
 	for command in readCSV(commands_path):
 		try:
 			package = ".".join(command[1].split(".")[:-1])
