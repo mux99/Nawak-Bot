@@ -66,6 +66,7 @@ class Command():
 
 def commandHandler(command, args, message, lib):
 	try:
+		tmp = " ".join(args)
 		log.info(f"{message.author.name}#{message.author.discriminator} attempt runing: '{command} {tmp}'")
 		if lib[command].perm_check(message.author):
 			try:
